@@ -1,0 +1,10 @@
+aiohttp==3.12.13
+SQLAlchemy==2.0.41
+asyncpg==0.30.0
+aiofiles==24.1.0
+beautifulsoup4==4.13.4
+requests==2.32.3
+lxml==5.4.0
+xlrd==2.0.1
+psycopg2-binary==2.9.10
+python-dotenv==1.1.1
