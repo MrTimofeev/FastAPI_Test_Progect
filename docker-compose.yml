@@ -1,4 +1,4 @@
-version: '3.8'
+name: spimex-trading-api
 
 services:
   postgres:
@@ -10,24 +10,36 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
 
   api-service:
-    build: ./api-service
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    build: ./api_service
     ports:
       - "8000:8000"
     depends_on:
       - postgres
       - redis
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://user:password@postgres/spimex_db"
+    restart: unless-stopped
 
   parser-service:
-    build: ./parser-service
-    command: python parser.py
+    build: ./parser_service
     depends_on:
       - postgres
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://user:password@postgres/spimex_db"
+    restart: on-failure
+    
+volumes:
+  postgres_data:
+  redis_data:
