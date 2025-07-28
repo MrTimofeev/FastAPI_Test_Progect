@@ -78,7 +78,6 @@ class ParserTrade:
 
     async def download_xls(self, url):
         """Скачивает файл по ссылке"""
-        print("САЛАМ АЛЕЙКУМ МУЖИКУ")
         connector = aiohttp.TCPConnector(limit_per_host=3, ssl=False)
         async with aiohttp.ClientSession(connector=connector) as session:
             try:
