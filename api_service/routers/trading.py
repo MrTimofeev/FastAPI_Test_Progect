@@ -1,16 +1,21 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Any
 
-from models import ParsedData
-from schemas import LastDatesResponse, ParsedDataSchema, DynamicsRequest, ResultsRequest
-from database import get_db
-from redis_cache import get_redis, get_redis_ttl
+from api_service.models import ParsedData
+from api_service.schemas import LastDatesResponse, ParsedDataSchema, DynamicsRequest, ResultsRequest
+from api_service.database import get_db
+from api_service.redis_cache import get_redis, get_redis_ttl
 import json
 
 
 router = APIRouter(prefix="/trading", tags=["Trading Results"])
+
+
+# Зависимость для получения Redis-клиента
+async def get_redis_client():
+    return await get_redis()
 
 
 # Вспомогательная функция для генерации ключей кэша
@@ -20,18 +25,15 @@ def generate_cache_key(prefix: str, **kwargs) -> str:
 
 
 @router.get("/last_dates", response_model=LastDatesResponse)
-async def get_last_trading_dates(n: int = Query(5, ge=1), db: AsyncSession = Depends(get_db)):
+async def get_last_trading_dates(
+    n: int = Query(5, ge=1),
+    db: AsyncSession = Depends(get_db),
+    redis: Any = Depends(get_redis_client)
+):
     """
     Возвращает список последних торговых дат.
-
-    ## Параметры:
-    - **n** (int): количество возвращаемых дат (минимум 1)
-
-    ## Ответ:
-    JSON-массив с датами в формате `YYYY-MM-DD`
     """
     cache_key = f"last_dates:{n}"
-    redis = await get_redis()
     cached = await redis.get(cache_key)
 
     if cached:
@@ -44,11 +46,10 @@ async def get_last_trading_dates(n: int = Query(5, ge=1), db: AsyncSession = Dep
         .order_by(ParsedData.date.desc())
         .limit(n)
     )
-    dates = [row[0].isoformat() for row in result.all()]
+    rows = await result.all()
+    dates = [row[0].isoformat() for row in rows]
 
     response = {"dates": dates}
-
-    # Сохраняем в Redis
     await redis.setex(cache_key, get_redis_ttl(), json.dumps(response))
     return response
 
@@ -56,23 +57,13 @@ async def get_last_trading_dates(n: int = Query(5, ge=1), db: AsyncSession = Dep
 @router.get("/dynamics", response_model=List[ParsedDataSchema])
 async def get_dynamics(
     request: DynamicsRequest = Depends(),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    redis: Any = Depends(get_redis_client)
 ):
     """
     Возвращает данные о торгах за определённый период с фильтрами.
-
-    ## Фильтры:
-    - **oil_id**: идентификатор нефти
-    - **delivery_type_id**: тип поставки
-    - **delivery_basis_id**: базис поставки
-    - **start_date**: начало периода
-    - **end_date**: конец периода
-
-    ## Ответ:
-    Список записей с полной информацией о торгах
     """
-    cache_key = generate_cache_key("dynamics", **request.dict())
-    redis = await get_redis()
+    cache_key = generate_cache_key("dynamics", **request.model_dump())
     cached = await redis.get(cache_key)
 
     if cached:
@@ -95,7 +86,8 @@ async def get_dynamics(
         query = query.where(ParsedData.date <= request.end_date)
 
     result = await db.execute(query)
-    data = [item.to_dict() for item, in result]
+    rows = await result.all()
+    data = [item.to_dict() for item, in rows]
 
     await redis.setex(cache_key, get_redis_ttl(), json.dumps(data))
     return data
@@ -104,22 +96,13 @@ async def get_dynamics(
 @router.get("/results", response_model=List[ParsedDataSchema])
 async def get_trading_results(
     request: ResultsRequest = Depends(),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    redis: Any = Depends(get_redis_client),
 ):
     """
     Возвращает последние торги по заданным фильтрам.
-
-    ## Фильтры:
-    - **oil_id**: идентификатор нефти
-    - **delivery_type_id**: тип поставки
-    - **delivery_basis_id**: базис поставки
-
-    ## Ответ:
-    Список записей за самую последнюю дату торгов
     """
-    
-    cache_key = generate_cache_key("results", **request.dict())
-    redis = await get_redis()
+    cache_key = generate_cache_key("results", **request.model_dump())
     cached = await redis.get(cache_key)
 
     if cached:
@@ -133,7 +116,8 @@ async def get_trading_results(
         .limit(1)
     )
     last_date_result = await db.execute(last_date_query)
-    last_date = last_date_result.scalar_one_or_none()
+    # ✅ Исправлено: await scalar_one_or_none()
+    last_date = await last_date_result.scalar_one_or_none()
 
     if not last_date:
         return []
@@ -151,7 +135,8 @@ async def get_trading_results(
                             request.delivery_basis_id)
 
     result = await db.execute(query)
-    data = [item.to_dict() for item, in result.all()]
+    rows = await result.all()
+    data = [item.to_dict() for item, in rows]
 
     await redis.setex(cache_key, get_redis_ttl(), json.dumps(data))
     return data

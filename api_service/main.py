@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers.trading import router as trading_router
+from .routers.trading import router as trading_router
 
 app = FastAPI(title="Spimex Trading Results API")
 
