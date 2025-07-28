@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List
 
 from models import ParsedData
 from schemas import LastDatesResponse, ParsedDataSchema, DynamicsRequest, ResultsRequest

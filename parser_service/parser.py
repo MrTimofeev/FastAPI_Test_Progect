@@ -4,8 +4,8 @@ import xlrd
 import io
 import asyncio
 import aiohttp
-from models import ParsedData
-from database import engine, AsyncSessionLocal
+from .models import ParsedData
+from .database import engine, AsyncSessionLocal
 from sqlalchemy import insert
 
 
@@ -78,10 +78,12 @@ class ParserTrade:
 
     async def download_xls(self, url):
         """Скачивает файл по ссылке"""
+        print("САЛАМ АЛЕЙКУМ МУЖИКУ")
         connector = aiohttp.TCPConnector(limit_per_host=3, ssl=False)
         async with aiohttp.ClientSession(connector=connector) as session:
             try:
                 async with session.get(url, timeout=10) as response:
+                    print(f"DEBUG: response = {response}, status = {getattr(response, 'status', 'NO STATUS')}")  # ← ДОБАВЬ ЭТО
                     if response.status == 200:
                         content = await response.read()
                         return io.BytesIO(content)
