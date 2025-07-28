@@ -4,8 +4,8 @@ import xlrd
 import io
 import asyncio
 import aiohttp
-from .models import ParsedData
-from .database import engine, AsyncSessionLocal
+from parser_service.models import ParsedData
+from parser_service.database import engine, AsyncSessionLocal
 from sqlalchemy import insert
 
 

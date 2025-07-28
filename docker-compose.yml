@@ -30,6 +30,7 @@ services:
       - redis
     environment:
       DATABASE_URL: "postgresql+asyncpg://user:password@postgres/spimex_db"
+      PYTHONPATH: /app
     restart: unless-stopped
 
   parser-service:
@@ -38,6 +39,7 @@ services:
       - postgres
     environment:
       DATABASE_URL: "postgresql+asyncpg://user:password@postgres/spimex_db"
+      PYTHONPATH: /app
     restart: on-failure
     
 volumes:

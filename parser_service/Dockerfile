@@ -5,7 +5,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY . /app/parser_service/
 
-# Запуск скрипта с ожиданием БД
-CMD ["sh", "-c", "python wait_for_db.py && python parser.py"]
+# Устанавливаем PYTHONPATH, чтобы Python видел parser_service как пакет
+ENV PYTHONPATH=/app
+
+# Запускаем parser.py из пакета
+CMD ["sh", "-c", "python /app/parser_service/wait_for_db.py && python /app/parser_service/parser.py"]

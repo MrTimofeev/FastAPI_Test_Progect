@@ -46,7 +46,7 @@ async def get_last_trading_dates(
         .order_by(ParsedData.date.desc())
         .limit(n)
     )
-    rows = await result.all()
+    rows = result.all()
     dates = [row[0].isoformat() for row in rows]
 
     response = {"dates": dates}
@@ -86,7 +86,7 @@ async def get_dynamics(
         query = query.where(ParsedData.date <= request.end_date)
 
     result = await db.execute(query)
-    rows = await result.all()
+    rows = result.all()
     data = [item.to_dict() for item, in rows]
 
     await redis.setex(cache_key, get_redis_ttl(), json.dumps(data))
@@ -116,8 +116,7 @@ async def get_trading_results(
         .limit(1)
     )
     last_date_result = await db.execute(last_date_query)
-    # ✅ Исправлено: await scalar_one_or_none()
-    last_date = await last_date_result.scalar_one_or_none()
+    last_date = last_date_result.scalar_one_or_none()
 
     if not last_date:
         return []
@@ -135,7 +134,7 @@ async def get_trading_results(
                             request.delivery_basis_id)
 
     result = await db.execute(query)
-    rows = await result.all()
+    rows = result.all()
     data = [item.to_dict() for item, in rows]
 
     await redis.setex(cache_key, get_redis_ttl(), json.dumps(data))

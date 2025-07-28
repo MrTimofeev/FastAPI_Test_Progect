@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date
-from .database import Base
+from parser_service.database import Base
 
 class ParsedData(Base):
     __tablename__ = 'parsed_data'
