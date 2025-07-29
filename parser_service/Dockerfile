@@ -1,14 +1,20 @@
+# parser_service/Dockerfile
 FROM python:3.13-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Копируем зависимости парсера
+COPY requirements/parser.txt .
 
-COPY . /app/parser_service/
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r parser.txt
 
-# Устанавливаем PYTHONPATH, чтобы Python видел parser_service как пакет
-ENV PYTHONPATH=/app
+# Копируем pyproject.toml и src/
+COPY pyproject.toml .
+COPY src/ src/
 
-# Запускаем parser.py из пакета
-CMD ["sh", "-c", "python /app/parser_service/wait_for_db.py && python /app/parser_service/parser.py"]
+# Устанавливаем проект в editable-режиме
+RUN pip install -e .
+
+# Запускаем парсер
+CMD ["sh", "-c", "python -c 'from parser_service.parser import ParserTrade; import asyncio; asyncio.run(ParserTrade().run())'"]

@@ -22,7 +22,9 @@ services:
     restart: unless-stopped
 
   api-service:
-    build: ./api_service
+    build: 
+      context: .                    
+      dockerfile: api_service/Dockerfile        
     ports:
       - "8000:8000"
     depends_on:
@@ -34,7 +36,9 @@ services:
     restart: unless-stopped
 
   parser-service:
-    build: ./parser_service
+    build: 
+      context: . 
+      dockerfile: parser_service/Dockerfile
     depends_on:
       - postgres
     environment:

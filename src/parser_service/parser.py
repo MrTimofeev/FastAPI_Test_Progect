@@ -82,7 +82,6 @@ class ParserTrade:
         async with aiohttp.ClientSession(connector=connector) as session:
             try:
                 async with session.get(url, timeout=10) as response:
-                    print(f"DEBUG: response = {response}, status = {getattr(response, 'status', 'NO STATUS')}")  # ← ДОБАВЬ ЭТО
                     if response.status == 200:
                         content = await response.read()
                         return io.BytesIO(content)
