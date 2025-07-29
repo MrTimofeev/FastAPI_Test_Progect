@@ -18,26 +18,40 @@
 ## 📦 Структура проекта
 
 ```
-FastAPI_Test_Progect/
+spimex-trading-api/
 │
-├── parser_service/          # Парсер (спайдер)
-│   ├── parser.py            # Основной скрипт парсинга
-│   ├── database.py          # Подключение к БД
-│   └── requirements.txt     # Зависимости парсера
+├── src/                       # Общая кодовая база
+│ ├── api_service/             # FastAPI сервис
+│ │ ├── main.py                # Точка входа
+│ │ ├── routers/trading.py     # Эндпоинты
+│ │ ├── models.py              # ORM-модели
+│ │ ├── schemas.py             # Pydantic-схемы
+│ │ ├── database.py            # Асинхронная сессия
+│ │ └── redis_cache.py         # Кэширование через Redis
+│ └── parser_service/          # Парсер
+│ ├── parser.py                # Основная логика парсинга
+│ ├── models.py                # ORM-модели (общие с API)
+│ └── database.py              # Подключение к БД
 │
-├── api_service/             # FastAPI приложение
-│   ├── main.py              # Точка входа FastAPI
-│   ├── models.py            # ORM модели
-│   ├── schemas.py           # Pydantic-модели
-│   ├── database.py          # Асинхронное подключение к БД
-│   ├── redis_cache.py       # Работа с Redis
-│   ├── routers/
-│   │   └── trading.py       # Эндпоинты
-│   └── requirements.txt     # Зависимости API
+├── requirements/              # Зависимости
+│ ├── api.txt                  # Зависимости API
+│ └── parser.txt               # Зависимости парсера
 │
-├── docker-compose.yml       # Описание контейнеров
-├── .gitignore               # Файлы, исключённые из Git
-└── README.md                # Этот файл
+├── api_service/               # Сборка API
+│ └── Dockerfile
+│
+├── parser_service/            # Сборка парсера
+│ └── Dockerfile
+│
+│ ├── api/                     # Тесты API
+│ ├── parser/                  # Тесты парсера
+│ └── conftest.py              # Общие фикстуры
+├── tests/                     # Тесты
+│
+├── pyproject.toml             # Метаданные пакета (src/)
+├── docker-compose.yml         # Оркестрация сервисов
+├── .gitignore                 # Исключённые файлы
+└── README.md                  # Этот файл
 ```
 
 ---
